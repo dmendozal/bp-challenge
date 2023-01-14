@@ -1,5 +1,6 @@
 using Ardalis.ApiEndpoints;
 using BpChallenge.Api.DTOs;
+using BpChallenge.Api.Exceptions;
 using BpChallenge.Domain.Entities;
 using BpChallenge.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -40,7 +41,7 @@ public class List : EndpointBaseAsync
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken: cancellationToken);
 
         if (user == null)
-            return NotFound("User does not exists.");
+            return NotFound(ErrorMessages.UserNotExists);
 
         var goals = await _dbContext.Set<Goal>()
                                     .Include(x => x.FinancialEntity)

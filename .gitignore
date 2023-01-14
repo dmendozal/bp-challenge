@@ -1,0 +1,7 @@
+src/BackEnd/BpChallenge/.vs/
+src/BackEnd/BpChallenge/BpChallenge.Api/bin/
+src/BackEnd/BpChallenge/BpChallenge.Api/obj/
+src/BackEnd/BpChallenge/BpChallenge.Domain/bin/
+src/BackEnd/BpChallenge/BpChallenge.Domain/obj/
+src/BackEnd/BpChallenge/BpChallenge.Infrastructure/bin/
+src/BackEnd/BpChallenge/BpChallenge.Infrastructure/obj/

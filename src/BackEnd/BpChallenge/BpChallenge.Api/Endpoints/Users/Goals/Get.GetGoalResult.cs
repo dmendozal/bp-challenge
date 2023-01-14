@@ -11,4 +11,4 @@ public record GetGoalResult(string GoalTitle,
                               FinancialEntityResult FinancialEntity,
                               double TotalContributions,
                               double TotalWithdrawal,
-                              double GoalAchievementPercentage);
+                              string GoalAchievementPercentage);

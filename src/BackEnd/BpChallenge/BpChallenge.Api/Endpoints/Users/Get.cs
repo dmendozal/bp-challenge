@@ -1,4 +1,5 @@
 using Ardalis.ApiEndpoints;
+using BpChallenge.Api.Exceptions;
 using BpChallenge.Domain.Entities;
 using BpChallenge.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
@@ -33,10 +34,10 @@ public class Get : EndpointBaseAsync
     [ProducesResponseType(StatusCodes.Status200OK)]
     public override async Task<ActionResult<GetUserResult>> HandleAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Set<User>().FirstOrDefaultAsync(x => x.Id == userId);
+        var user = await _dbContext.Set<User>().FirstOrDefaultAsync(x => x.Id == userId, cancellationToken: cancellationToken);
 
         if (user == null)
-            return NotFound("User does not exists.");
+            return NotFound(ErrorMessages.UserNotExists);
 
         return Ok(new GetUserResult(user.Id,
                                     $"{user.FirstName} {user.Surname}",
