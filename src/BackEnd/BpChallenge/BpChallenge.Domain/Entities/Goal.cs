@@ -13,8 +13,8 @@ public class Goal : BaseEntity
     public GoalCategory GoalCategory { get; private set; }
     public int RiskLevelId { get; private set; }
     public RiskLevel RiskLevel { get; private set; }
-    public int PortafolioId { get; private set; }
-    public Portafolio Portafolio { get; private set; }
+    public int PortfolioId { get; private set; }
+    public Portfolio Portfolio { get; private set; }
     public int FinancialEntityId { get; private set; }
     public FinancialEntity FinancialEntity { get; private set; }
     public int CurrencyId { get; private set; }

@@ -1,9 +1,9 @@
 ﻿namespace BpChallenge.Domain.Entities;
 
-public class Portafolio : BaseEntity
+public class Portfolio : BaseEntity
 {
-    public decimal MaxRangeYear { get; private set; }
-    public decimal MinRangeYear { get; private set; }
+    public double MaxRangeYear { get; private set; }
+    public double MinRangeYear { get; private set; }
     public string UuId { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
@@ -20,6 +20,6 @@ public class Portafolio : BaseEntity
     public InvestmentStrategy InvestmentStrategy { get; private set; }
     public string Version { get; private set; }
     public string ExtraProfitabilityCurrencyCode { get; private set; }
-    public decimal EstimatedProfitability { get; private set; }
-    public decimal BpComission { get; private set; }
+    public double EstimatedProfitability { get; private set; }
+    public double BpComission { get; private set; }
 }

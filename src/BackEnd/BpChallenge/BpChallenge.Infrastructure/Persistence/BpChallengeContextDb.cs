@@ -25,8 +25,8 @@ public class BpChallengeContextDb : DbContext
     public DbSet<FinancialEntity> FinancialEntity => Set<FinancialEntity>();
     public DbSet<InvestmentStrategy> InvestmentStrategy => Set<InvestmentStrategy>();
     public DbSet<InvestmentStrategyType> InvestmentStrategyType => Set<InvestmentStrategyType>();
-    public DbSet<Portafolio> Portafolio => Set<Portafolio>();
-    public DbSet<PortafolioComposition> PortafolioComposition => Set<PortafolioComposition>();
-    public DbSet<PortafolioFunding> PortafolioFunding => Set<PortafolioFunding>();
+    public DbSet<Portfolio> Portfolio => Set<Portfolio>();
+    public DbSet<PortfolioComposition> PortfolioComposition => Set<PortfolioComposition>();
+    public DbSet<PortfolioFunding> PortfolioFunding => Set<PortfolioFunding>();
     public DbSet<RiskLevel> RiskLevel => Set<RiskLevel>();
 }

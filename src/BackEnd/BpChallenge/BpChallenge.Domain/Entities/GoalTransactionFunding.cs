@@ -4,9 +4,9 @@ namespace BpChallenge.Domain.Entities;
 
 public class GoalTransactionFunding : BaseEntity
 {
-    public decimal Percentage { get; private set; }
-    public decimal Amount { get; private set; }
-    public decimal Quotas { get; private set; }
+    public double Percentage { get; private set; }
+    public double Amount { get; private set; }
+    public double Quotas { get; private set; }
     public DateTime Date { get; private set; }
     public int FundingId { get; private set; }
     public Funding Funding { get; private set; }
@@ -16,7 +16,7 @@ public class GoalTransactionFunding : BaseEntity
     public string Type { get; private set; }
     public int GoalId { get; private set; }
     public Goal Goal { get; private set; }
-    public User OwnerId { get; private set; }
+    public int OwnerId { get; private set; }
     public User Owner { get; private set; }
-    public decimal Cost { get; private set; }
+    public double Cost { get; private set; }
 }
