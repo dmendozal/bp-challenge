@@ -1,4 +1,6 @@
 using BpChallenge.Infrastructure.Persistence;
+using BpChallenge.Infrastructure.Persistence.Repositories;
+using BpChallenge.Infrastructure.Persistence.Repositories.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +13,7 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+builder.Services.AddTransient<ISummaryRepository, SummaryRepository>();
 
 builder.Services.AddDbContext<BpChallengeContextDb>(options =>
 {

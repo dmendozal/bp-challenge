@@ -1,7 +1,9 @@
 using Ardalis.ApiEndpoints;
 using BpChallenge.Api.DTOs;
+using BpChallenge.Api.Exceptions;
 using BpChallenge.Domain.Entities;
 using BpChallenge.Infrastructure.Persistence;
+using BpChallenge.Infrastructure.Persistence.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,10 +19,12 @@ public class Get : EndpointBaseAsync
     .WithActionResult<GetGoalResult>
 {
     private readonly BpChallengeContextDb _dbContext;
+    private readonly ISummaryRepository _summaryRepository;
 
-    public Get(BpChallengeContextDb bpChallengeContextDb)
+    public Get(BpChallengeContextDb bpChallengeContextDb, ISummaryRepository summaryRepository)
     {
         _dbContext = bpChallengeContextDb;
+        _summaryRepository = summaryRepository;
     }
 
     [HttpGet("api/users/{userId:int}/goals/{goalId:int}")]
@@ -39,22 +43,30 @@ public class Get : EndpointBaseAsync
             .FirstOrDefaultAsync(x => x.Id == command.UserId, cancellationToken: cancellationToken);
 
         if (user == null)
-            return NotFound("El usuario no existe.");
+            return NotFound(ErrorMessages.UserNotExists);
 
         var goal = await _dbContext.Set<Goal>()
                                     .Include(x => x.FinancialEntity)
                                     .Include(x => x.GoalCategory)
                                     .Include(x => x.Portfolio)
-                                    .FirstOrDefaultAsync(x => x.Id == command.GoalId && x.UserId == user.Id, cancellationToken: cancellationToken);
+                                    .FirstOrDefaultAsync(x => x.Id == command.GoalId && x.UserId == user.Id,
+                                                         cancellationToken: cancellationToken);
 
         if (goal == null)
-            return NotFound("El usuario no tiene una meta asignada");
+            return NotFound(ErrorMessages.GoalUserNotExists);
 
         var transactions = await _dbContext.Set<GoalTransaction>()
                                            .Where(x => x.GoalId == goal.Id)
                                            .ToListAsync(cancellationToken: cancellationToken);
 
-        
+        var goalTransactionFunding = await _dbContext.Set<GoalTransactionFunding>()
+                                                     .Include(x => x.Funding)
+                                                     .Where(x => x.GoalId == goal.Id)
+                                                     .ToListAsync(cancellationToken: cancellationToken);
+
+        var fundingShareValues = await _dbContext.Set<FundingShareValue>().ToListAsync(cancellationToken: cancellationToken);
+        var balance = await _summaryRepository.GetBalance(goalTransactionFunding, user.CurrencyId, fundingShareValues);
+        var goalAchievementPercentage = _summaryRepository.GetGoalAchievementPercentage(goal, balance);
 
         var result = new GetGoalResult(goal.Title,
                                        goal.Years,
@@ -65,9 +77,7 @@ public class Get : EndpointBaseAsync
                                        new FinancialEntityResult(goal.FinancialEntity.Title, goal.FinancialEntity.Description, goal.FinancialEntity.Logo),
                                        transactions.Where(x => x.Type == "buy").Sum(x => x.Amount),
                                        transactions.Where(x => x.Type == "sale").Sum(x => x.Amount),
-                                       0);
-
-
+                                       goalAchievementPercentage);
 
         return Ok(result);
     }

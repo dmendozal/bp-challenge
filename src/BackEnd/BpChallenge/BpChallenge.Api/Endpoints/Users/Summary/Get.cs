@@ -1,11 +1,12 @@
 using Ardalis.ApiEndpoints;
+using BpChallenge.Api.Exceptions;
 using BpChallenge.Domain.Entities;
 using BpChallenge.Infrastructure.Persistence;
+using BpChallenge.Infrastructure.Persistence.Repositories.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,13 +16,15 @@ namespace BpChallenge.Api.Endpoints.Users.Summary;
 
 public class Get : EndpointBaseAsync
     .WithRequest<int>
-    .WithActionResult<GetSummaryResult>
+    .WithActionResult<IEnumerable<GetSummaryResult>>
 {
     private readonly BpChallengeContextDb _dbContext;
+    private readonly ISummaryRepository _summaryRepository;
 
-    public Get(BpChallengeContextDb bpChallengeContextDb)
+    public Get(BpChallengeContextDb bpChallengeContextDb, ISummaryRepository summaryRepository)
     {
         _dbContext = bpChallengeContextDb;
+        _summaryRepository = summaryRepository;
     }
 
     [HttpGet("api/users/{userId:int}/summary")]
@@ -33,63 +36,40 @@ public class Get : EndpointBaseAsync
     ]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public override async Task<ActionResult<GetSummaryResult>> HandleAsync(int userId, CancellationToken cancellationToken = default)
+    public override async Task<ActionResult<IEnumerable<GetSummaryResult>>> HandleAsync(int userId, CancellationToken cancellationToken = default)
     {
         var user = await _dbContext.Set<User>()
             .Include(x => x.Currency)
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken: cancellationToken);
 
         if (user == null)
-            return NotFound("User does not exists.");
+            return NotFound(ErrorMessages.UserNotExists);
 
+        var summaryResult = new List<GetSummaryResult>();
         var currency = user.Currency.Name;
-        var contributions = await _dbContext.Set<GoalTransaction>()
-                                            .Where(x => x.Type == "buy" && x.OwnerId == userId)
-                                            .SumAsync(x => x.Amount, cancellationToken: cancellationToken);
-        var balance = await GetBalance(userId);
 
-        return Ok(new GetSummaryResult($"{balance} {currency}", $"{contributions} {currency}"));
-    }
-
-    private async Task<double> GetBalance(int userId)
-    {
-        var listResult = new List<double>();
-        var fundingShareValues = await _dbContext.Set<FundingShareValue>().ToListAsync();
         var goalTransactionFunding = await _dbContext.Set<GoalTransactionFunding>()
-                                                     .Include(x => x.Funding)
-                                                     .Include(x => x.Transaction)
-                                                     .Where(x => x.OwnerId == userId)
-                                                     .ToListAsync();
-        if (goalTransactionFunding.Count > 0)
+                                              .Include(x => x.Goal)
+                                              .Include(x => x.Transaction)
+                                              .Include(x => x.Funding)
+                                              .Where(x => x.OwnerId == userId)
+                                              .GroupBy(x => x.Goal.Title)
+                                              .ToListAsync(cancellationToken: cancellationToken);
+
+        var fundingShareValues = await _dbContext.Set<FundingShareValue>().ToListAsync(cancellationToken: cancellationToken);
+
+        foreach (var item in goalTransactionFunding)
         {
-            foreach (var item in goalTransactionFunding)
+            if (item.Any())
             {
-                double result = default;
-                var quotaValue = item.Funding.IsBox ? 1 : item.Quotas;
+                var balance = await _summaryRepository.GetBalance(item.ToList(), user.CurrencyId, fundingShareValues);
 
-                if (item.Funding.HasShareValue)
-                {
-                    var fundingShareValue = fundingShareValues.FirstOrDefault(x => x.Date == item.Date && x.FundingId == item.FundingId);
-                    result = quotaValue * fundingShareValue.Value;
-                }
-
-                var currencyIndicatorValue = await GetCurrencyIndicatorValue(item.Transaction.CurrencyId, item.Funding.CurrencyId, item.Date);
-
-                result = quotaValue * currencyIndicatorValue;
-
-                listResult.Add(result);
+                summaryResult.Add(new GetSummaryResult(item.Key,
+                                                  $"{balance} {currency}",
+                                                  $"{item.Sum(x => x.Amount)} {currency}"));
             }
         }
 
-        return listResult.Sum();
-    }
-
-    private async Task<double> GetCurrencyIndicatorValue(int currencySourceId, int currencyDestineId, DateTime date)
-    {
-        var currencyIndicator = await _dbContext.Set<CurrencyIndicator>()
-                                          .FirstOrDefaultAsync(x => x.SourceCurrencyId == currencySourceId
-                                                                    && x.DestinationCurrencyId == currencyDestineId
-                                                                    && x.Date == date);
-        return currencyIndicator?.Value ?? 1;
+        return Ok(summaryResult);
     }
 }
