@@ -34,7 +34,8 @@ public class Get : EndpointBaseAsync
     [ProducesResponseType(StatusCodes.Status200OK)]
     public override async Task<ActionResult<GetUserResult>> HandleAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var user = await _dbContext.Set<User>().FirstOrDefaultAsync(x => x.Id == userId, cancellationToken: cancellationToken);
+        var user = await _dbContext.Set<User>().Include(x => x.Advisor).FirstOrDefaultAsync(x => x.Id == userId,
+                                                                                            cancellationToken: cancellationToken);
 
         if (user == null)
             return NotFound(ErrorMessages.UserNotExists);
