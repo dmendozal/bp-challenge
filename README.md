@@ -10,6 +10,7 @@ The project uses .NET 7.0, Ardalis ApiEndpoints - Clean Architecture and EntityF
 
 ## How To Run
 
+* Clone the repository "https://github.com/dmendozal/bp-challenge.git"
 * Open solution in Visual Studio 2022
 * Set "BpChallenge.Api" as Startup Project and build the project.
 * Set "ConnectionString:BpChallengeDb" in the "appsettings.json" file
